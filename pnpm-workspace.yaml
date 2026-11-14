@@ -1,3 +1,7 @@
 allowBuilds:
   '@google/genai': false
+  esbuild: false
+  llmock: false
   protobufjs: false
+minimumReleaseAgeExclude:
+  - llmock@3.14.0

@@ -36,13 +36,19 @@
   "scripts": {
     "build": "tsc -p tsconfig.build.json",
     "typecheck": "tsc --noEmit && tsc -p tsconfig.portable.json --noEmit",
-    "test": "pnpm run build && tsc -p tsconfig.test.json && node --test --test-concurrency=1 .build/test/*.test.js",
-    "check": "pnpm run typecheck && pnpm run test"
+    "test": "pnpm run build && tsc -p tsconfig.test.json && node --test --test-concurrency=1 .build/test/*.test.js test/*.test.mjs",
+    "check": "pnpm run typecheck && pnpm run test",
+    "console": "pnpm run build && node examples/console.mjs",
+    "mock:start": "node --import tsx dev/mock.mjs"
   },
   "dependencies": {
     "@earendil-works/pi-ai": "1.5.2",
     "@types/node": "24.10.0",
     "ts-node": "10.9.2",
     "typescript": "5.9.3"
+  },
+  "devDependencies": {
+    "llmock": "3.14.0",
+    "tsx": "4.23.15"
   }
 }
