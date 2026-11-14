@@ -14,6 +14,10 @@
       "types": "./dist/pi.d.ts",
       "default": "./dist/pi.js"
     },
+    "./node": {
+      "types": "./dist/node/index.d.ts",
+      "default": "./dist/node/index.js"
+    },
     "./skills": {
       "types": "./dist/skills/index.d.ts",
       "default": "./dist/skills/index.js"
@@ -32,14 +36,13 @@
   "scripts": {
     "build": "tsc -p tsconfig.build.json",
     "typecheck": "tsc --noEmit && tsc -p tsconfig.portable.json --noEmit",
-    "test": "tsc -p tsconfig.test.json && node --test --test-concurrency=1 .build/test/*.test.js",
-    "check": "pnpm run typecheck && pnpm run test && pnpm run build"
+    "test": "pnpm run build && tsc -p tsconfig.test.json && node --test --test-concurrency=1 .build/test/*.test.js",
+    "check": "pnpm run typecheck && pnpm run test"
   },
   "dependencies": {
-    "@earendil-works/pi-ai": "1.5.2"
-  },
-  "devDependencies": {
+    "@earendil-works/pi-ai": "1.5.2",
     "@types/node": "24.10.0",
+    "ts-node": "10.9.2",
     "typescript": "5.9.3"
   }
 }
