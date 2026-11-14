@@ -1,0 +1,38 @@
+{
+  "name": "@bitagent/core",
+  "version": "0.1.0",
+  "description": "Program-controlled LLM workflows with a persistent TypeScript console.",
+  "type": "module",
+  "main": "./dist/index.js",
+  "types": "./dist/index.d.ts",
+  "exports": {
+    ".": {
+      "types": "./dist/index.d.ts",
+      "default": "./dist/index.js"
+    },
+    "./skills": {
+      "types": "./dist/skills/index.d.ts",
+      "default": "./dist/skills/index.js"
+    }
+  },
+  "files": [
+    "dist",
+    "README.md",
+    "README.zh-Hans.md"
+  ],
+  "sideEffects": false,
+  "engines": {
+    "node": ">=24"
+  },
+  "packageManager": "pnpm@12.18.0",
+  "scripts": {
+    "build": "tsc -p tsconfig.build.json",
+    "typecheck": "tsc --noEmit && tsc -p tsconfig.portable.json --noEmit",
+    "test": "tsc -p tsconfig.test.json && node --test --test-concurrency=1 .build/test/*.test.js",
+    "check": "pnpm run typecheck && pnpm run test && pnpm run build"
+  },
+  "devDependencies": {
+    "@types/node": "24.10.0",
+    "typescript": "5.9.3"
+  }
+}

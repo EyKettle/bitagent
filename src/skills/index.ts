@@ -1,0 +1,19 @@
+import type { TextGenerator, TextResult } from "../index.js";
+
+export interface SummarizeInput {
+  readonly text: string;
+  readonly instruction: string;
+}
+
+/** An ordinary function: no registration, agent, hidden history, or special host access. */
+export function summarize(
+  llm: TextGenerator,
+  input: SummarizeInput,
+  signal?: AbortSignal,
+): Promise<TextResult> {
+  return llm.generate({
+    system: input.instruction,
+    prompt: input.text,
+    ...(signal === undefined ? {} : { signal }),
+  });
+}
