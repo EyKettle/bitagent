@@ -1,3 +1,7 @@
+export { runFileConsole } from "./file-console.js";
+export type { FileConsoleOptions } from "./file-console.js";
+export { initializeFileWorkspace } from "./workspace.js";
+export type { FileWorkspace } from "./workspace.js";
 export { createFileSession } from "./file-session.js";
 export type { Definition, DefinitionScope, FileEvaluation, FileSession, FileSessionOptions } from "./file-session.js";
 export { FileCompileError } from "./file-compiler.js";

@@ -64,7 +64,8 @@ function globalDeclarations(definitions: Iterable<SavedDefinition>, publicEntry:
     ? (item.typeOnly ? "  // @ts-expect-error TS1380: the ambient alias retains its source's type-only semantics.\n" : "") +
       `  export import ${item.name} = capture${index}.${item.alias};`
     : `  ${item.mutable ? "let" : "const"} ${item.name}: typeof capture${index}.${item.alias};`);
-  return [generatedHeader, ...imports, "export {};", "declare global {",
+  const nodeTypes = createRequire(import.meta.url).resolve("@types/node/index.d.ts");
+  return [generatedHeader, `/// <reference path=${JSON.stringify(nodeTypes)} />`, ...imports, "export {};", "declare global {",
     `  const app: import(${JSON.stringify(publicEntry)}).Scheduler;`,
     `  const llm: import(${JSON.stringify(publicEntry)}).LLMEntity;`,
     `  const scope: import(${JSON.stringify(nodeEntry)}).DefinitionScope;`,
