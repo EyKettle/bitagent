@@ -1,3 +1,5 @@
+export { createPiEntity } from "./pi-entity.js";
+
 import type { Api, AssistantMessage, Model } from "@earendil-works/pi-ai";
 import type { Models, ModelsSimpleStreamOptions } from "@earendil-works/pi-ai/models";
 import type { TextGenerator, TextRequest, TextResult } from "./index.js";

@@ -1,3 +1,6 @@
+export { answer, SubmissionError } from "./answer.js";
+export type { AnswerRequest } from "./answer.js";
+
 import type { TextGenerator, TextResult } from "../index.js";
 
 export interface SummarizeInput {
