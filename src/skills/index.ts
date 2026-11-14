@@ -1,3 +1,5 @@
+export { createTranslator } from "./translate.js";
+export type { Translate, Translation, TranslatorOptions } from "./translate.js";
 export { answer, SubmissionError } from "./answer.js";
 export type { AnswerRequest } from "./answer.js";
 
