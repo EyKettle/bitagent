@@ -138,7 +138,7 @@ test("file workflows use typed submit over the real Messages HTTP protocol", { t
     assert.equal(llm.status, "idle");
   });
 
-  await t.test("the default CLI runs editor files, retains state, and joins cancellation on exit", { timeout: 40000 }, async (t) => {
+  await t.test("the CLI with an explicit workspace retains state and joins cancellation on exit", { timeout: 40000 }, async (t) => {
     const cwd = workspace();
     writeFileSync(join(cwd, "observe.ts"), `
       const observer = app.start(function* () {

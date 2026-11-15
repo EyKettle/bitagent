@@ -1,5 +1,5 @@
 import { createRequire } from "node:module";
-import { dirname, isAbsolute, resolve } from "node:path";
+import { dirname, isAbsolute, relative, resolve, sep } from "node:path";
 import ts from "typescript";
 import { createContractTransformer } from "./contracts.js";
 
@@ -68,6 +68,22 @@ function diagnosticsText(diagnostics: readonly ts.Diagnostic[]): string {
   });
 }
 
+function sourceRoot(program: ts.Program, filename: string): string {
+  let root = dirname(filename);
+  for (const file of program.getSourceFiles()) {
+    if (file.isDeclarationFile || program.isSourceFileFromExternalLibrary(file)) continue;
+    const path = resolve(file.fileName);
+    while (true) {
+      const fromRoot = relative(root, path);
+      if (fromRoot !== ".." && !fromRoot.startsWith(".." + sep) && !isAbsolute(fromRoot)) break;
+      const parent = dirname(root);
+      if (parent === root) throw new FileCompileError(`Source files do not share a filesystem root: ${filename}, ${path}`);
+      root = parent;
+    }
+  }
+  return root;
+}
+
 /** Checks and emits the exact source snapshot, without reading it again during execution. */
 export function compileFile(
   filename: string,
@@ -88,14 +104,29 @@ export function compileFile(
     strict: true, noUncheckedIndexedAccess: true, exactOptionalPropertyTypes: true,
     skipLibCheck: true, target: ts.ScriptTarget.ES2022, module: ts.ModuleKind.NodeNext,
     moduleResolution: ts.ModuleResolutionKind.NodeNext, moduleDetection: ts.ModuleDetectionKind.Force,
-    declaration: true, preserveConstEnums: true, outDir: outputDirectory, noEmitOnError: true,
+    declaration: true, preserveConstEnums: true, noEmitOnError: true,
     lib: ["lib.es2022.d.ts"], types: ["node"],
     typeRoots: [dirname(dirname(createRequire(import.meta.url).resolve("@types/node/package.json")))],
   };
-  const host = ts.createCompilerHost(options);
-  const read = host.readFile.bind(host);
-  host.readFile = (path) => resolve(path) === filename ? prepared : read(path);
-  const program = ts.createProgram([filename, globals], options, host);
+  const contents = new Map<string, string | undefined>([[filename, prepared]]);
+  const compilerHost = (settings: ts.CompilerOptions): ts.CompilerHost => {
+    const host = ts.createCompilerHost(settings);
+    const read = host.readFile.bind(host);
+    host.readFile = (path) => {
+      const key = resolve(path);
+      if (!contents.has(key)) contents.set(key, read(path));
+      return contents.get(key);
+    };
+    return host;
+  };
+  // Resolve without an output mapping first: NodeNext otherwise guesses source
+  // roots for package self-imports. Include every local source dependency, not
+  // just the entry's directory, and check/emit the same captured file contents.
+  const roots = [filename, globals];
+  const discovered = ts.createProgram(roots, options, compilerHost(options));
+  const emitOptions = { ...options, rootDir: sourceRoot(discovered, filename), outDir: outputDirectory };
+  const host = compilerHost(emitOptions);
+  const program = ts.createProgram({ rootNames: roots, options: emitOptions, host, oldProgram: discovered });
   const file = program.getSourceFile(filename);
   if (!file) throw new FileCompileError(`Cannot load ${filename}`);
   const diagnostics = ts.getPreEmitDiagnostics(program);
@@ -222,7 +253,7 @@ export function compileFile(
     const origin = sourceByDeclaration.get(path)!;
     const modulePath = (specifier: string): string => {
       if (!specifier.startsWith(".") && !isAbsolute(specifier)) return specifier;
-      const target = ts.resolveModuleName(specifier, origin, options, host).resolvedModule;
+      const target = ts.resolveModuleName(specifier, origin, emitOptions, host).resolvedModule;
       return (target && importPaths.get(resolve(target.resolvedFileName))) ?? importPaths.get(specifier) ?? specifier;
     };
     const parsed = ts.createSourceFile(path, text, ts.ScriptTarget.ES2022, true);
@@ -261,7 +292,7 @@ export function compileFile(
     const visit = (node: ts.Node) => {
       if ((ts.isImportDeclaration(node) || ts.isExportDeclaration(node)) && node.moduleSpecifier && ts.isStringLiteral(node.moduleSpecifier)) {
         const specifier = node.moduleSpecifier.text;
-        const target = ts.resolveModuleName(specifier, local.fileName, options, host).resolvedModule;
+        const target = ts.resolveModuleName(specifier, local.fileName, emitOptions, host).resolvedModule;
         if (target) imports.set(specifier, resolve(target.resolvedFileName));
       }
       ts.forEachChild(node, visit);
