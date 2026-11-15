@@ -1,0 +1,4 @@
+[
+  { "type": "tool_use", "name": "submit", "input": { "value": { "text": "Hello" } } },
+  { "type": "tool_use", "name": "after_submit", "input": {} }
+]

@@ -75,6 +75,8 @@ test("a type error runs nothing; a runtime error retains initialized definitions
   const { files } = fixture(t);
   files.evaluate("let count = 0;");
   assert.throws(() => files.evaluate('count++; const bad: number = "wrong"'), FileCompileError);
+  assert.throws(() => files.evaluate('count++; const history: string[] = [];'), /Cannot redeclare block-scoped variable 'history'/);
+  assert.equal(files.scope.list().some((definition) => definition.name === "history"), false);
   assert.equal(files.evaluate("count").value, 0);
   assert.throws(() => files.evaluate('const good = 7; throw new Error("boom"); const later = 9;'), /boom/);
   assert.equal(files.evaluate("good").value, 7);

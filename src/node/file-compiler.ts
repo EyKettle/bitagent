@@ -1,5 +1,5 @@
 import { createRequire } from "node:module";
-import { dirname, resolve } from "node:path";
+import { dirname, isAbsolute, resolve } from "node:path";
 import ts from "typescript";
 import { createContractTransformer } from "./contracts.js";
 
@@ -205,9 +205,8 @@ export function compileFile(
   if (emit.emitSkipped || emit.diagnostics.length) throw new FileCompileError(diagnosticsText(emit.diagnostics));
   if (!captureFile || !javascript.has(filename)) throw new FileCompileError(`No executable output for ${filename}`);
 
-  // The checker can spell a constraint as an extensionless absolute import.
-  // Pin it to the emitted declaration when available, and supply NodeNext's
-  // executable extension without making a type-only import into a value.
+  // Declarations move into immutable execution snapshots. Resolve file imports
+  // from their original source, then point at the captured type when emitted.
   const importPaths = new Map<string, string>();
   for (const local of program.getSourceFiles()) {
     const origin = resolve(local.fileName);
@@ -217,19 +216,37 @@ export function compileFile(
     importPaths.set(origin.replace(/(?:\.d)?\.(?:cts|mts|ts|tsx)$/, ""), module);
     importPaths.set(origin, module);
   }
+  const sourceByDeclaration = new Map([...declarationOrigins].map(([origin, path]) => [path, origin]));
   const printer = ts.createPrinter();
   for (const [path, text] of declarations) {
+    const origin = sourceByDeclaration.get(path)!;
+    const modulePath = (specifier: string): string => {
+      if (!specifier.startsWith(".") && !isAbsolute(specifier)) return specifier;
+      const target = ts.resolveModuleName(specifier, origin, options, host).resolvedModule;
+      return (target && importPaths.get(resolve(target.resolvedFileName))) ?? importPaths.get(specifier) ?? specifier;
+    };
     const parsed = ts.createSourceFile(path, text, ts.ScriptTarget.ES2022, true);
     const transformed = ts.transform(parsed, [(context) => {
-      const visit: ts.Visitor = (node) => {
+      const visit: ts.Visitor = (input) => {
+        const node = ts.visitEachChild(input, visit, context);
         if (ts.isImportTypeNode(node) && ts.isLiteralTypeNode(node.argument) &&
             ts.isStringLiteral(node.argument.literal)) {
-          const replacement = importPaths.get(node.argument.literal.text);
-          if (replacement) return ts.factory.updateImportTypeNode(node,
-            ts.factory.createLiteralTypeNode(ts.factory.createStringLiteral(replacement)),
+          return ts.factory.updateImportTypeNode(node,
+            ts.factory.createLiteralTypeNode(ts.factory.createStringLiteral(modulePath(node.argument.literal.text))),
             node.attributes, node.qualifier, node.typeArguments, node.isTypeOf);
         }
-        return ts.visitEachChild(node, visit, context);
+        if (ts.isImportDeclaration(node) && ts.isStringLiteral(node.moduleSpecifier)) {
+          return ts.factory.updateImportDeclaration(node, node.modifiers, node.importClause,
+            ts.factory.createStringLiteral(modulePath(node.moduleSpecifier.text)), node.attributes);
+        }
+        if (ts.isExportDeclaration(node) && node.moduleSpecifier && ts.isStringLiteral(node.moduleSpecifier)) {
+          return ts.factory.updateExportDeclaration(node, node.modifiers, node.isTypeOnly, node.exportClause,
+            ts.factory.createStringLiteral(modulePath(node.moduleSpecifier.text)), node.attributes);
+        }
+        if (ts.isExternalModuleReference(node) && node.expression && ts.isStringLiteral(node.expression)) {
+          return ts.factory.updateExternalModuleReference(node, ts.factory.createStringLiteral(modulePath(node.expression.text)));
+        }
+        return node;
       };
       return (input) => ts.visitNode(input, visit) as ts.SourceFile;
     }]);

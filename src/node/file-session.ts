@@ -131,6 +131,23 @@ export function createFileSession(options: FileSessionOptions): FileSession {
   function syncDeclarations(next: Iterable<SavedDefinition> = definitions.values()): void {
     writeDeclarations(globalDeclarations(next, publicEntry, nodeEntry));
   }
+  function validateDeclarations(next: readonly SavedDefinition[]): void {
+    const options: ts.CompilerOptions = {
+      strict: true, noUncheckedIndexedAccess: true, exactOptionalPropertyTypes: true,
+      target: ts.ScriptTarget.ES2022, module: ts.ModuleKind.NodeNext,
+      moduleResolution: ts.ModuleResolutionKind.NodeNext, noEmit: true,
+      lib: ["lib.es2022.d.ts", "lib.dom.d.ts"], types: [], skipLibCheck: false,
+    };
+    const content = globalDeclarations(next, publicEntry, nodeEntry);
+    const host = ts.createCompilerHost(options);
+    const read = host.readFile.bind(host);
+    host.readFile = (path) => resolve(path) === declarationsPath ? content : read(path);
+    const program = ts.createProgram([declarationsPath], options, host);
+    const diagnostics = ts.getPreEmitDiagnostics(program);
+    if (diagnostics.length) throw new FileCompileError(ts.formatDiagnosticsWithColorAndContext(diagnostics, {
+      getCanonicalFileName: (path) => path, getCurrentDirectory: () => cwd, getNewLine: () => "\n",
+    }));
+  }
   const scope: DefinitionScope = Object.freeze({
     list: () => Object.freeze([...definitions.values()].map((item) => item.handle)),
     forget(handle: Definition): boolean {
@@ -170,6 +187,11 @@ export function createFileSession(options: FileSessionOptions): FileSession {
         mkdirSync(dirname(path), { recursive: true });
         writeFileSync(path, pinDeclarations(text, path, before), { flag: "wx" });
       }
+      // Check the proposed editor surface before user code has any effects. An
+      // ordinary module name may still conflict when published as a live global.
+      if (compiled.bindings.length) validateDeclarations([...before, ...compiled.bindings.map((binding) => ({
+        ...binding, handle: { name: binding.name, source: filename }, declaration: compiled.captureFile,
+      }))]);
       const created: Definition[] = [];
       const declare = (binding: Binding, get?: () => unknown, set?: (value: unknown) => void) => {
         // Merged namespaces and overloads share one binding and one handle.

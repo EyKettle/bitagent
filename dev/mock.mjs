@@ -3,7 +3,10 @@ import { fileURLToPath } from "node:url";
 import { startServer } from "llmock";
 
 const { values } = parseArgs({
-  options: { port: { type: "string", default: "4317" } },
+  options: {
+    port: { type: "string", default: "4317" },
+    model: { type: "string", default: "bitagent" },
+  },
   allowPositionals: false,
 });
 const port = Number(values.port);
@@ -16,6 +19,7 @@ process.env.MOCK_DB_PERSIST = "OFF";
 const server = await startServer({
   config: fileURLToPath(new URL("./llmock.json", import.meta.url)),
   port,
+  model: values.model,
   host: "127.0.0.1",
   settings: { admin: false, logRequests: false, debug: false },
 });

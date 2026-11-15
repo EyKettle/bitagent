@@ -1,0 +1,3 @@
+[
+  { "type": "tool_use", "name": "submit", "input": { "value": { "text": 42 } } }
+]

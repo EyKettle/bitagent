@@ -41,6 +41,34 @@
           "file": "fixtures/summary.txt"
         }
       ]
+    },
+    "submit": {
+      "name": "claude",
+      "model": "bitagent-submit",
+      "endpoint": "v1/messages",
+      "responseType": "stored",
+      "storedResponsesFile": "fixtures/default.json",
+      "validateRequests": true,
+      "logRequests": false,
+      "debug": false,
+      "stream": true,
+      "responseDelay": { "min": 25, "max": 25 },
+      "embeddings": { "enabled": false, "dimensions": 128 },
+      "chaos": { "enabled": false },
+      "responseRules": [
+        {
+          "match": "[wait]", "in": "last", "text": "Waiting for a control file.",
+          "fail": { "kind": "stream-stall", "afterChunks": 0 }
+        },
+        { "match": "[error]", "in": "last", "fail": { "kind": "http", "status": 500 } },
+        { "match": "[invalid]", "contentFile": "fixtures/submit-invalid.json" },
+        { "match": "Invalid submission:", "in": "last", "contentFile": "fixtures/submit-valid.json" },
+        { "match": "targetLanguage", "in": "last", "contentFile": "fixtures/submit-invalid.json" },
+        {
+          "match": "[user-function]", "in": "last",
+          "content": [{ "type": "tool_use", "name": "submit", "input": { "value": { "label": "example", "items": 2 } } }]
+        }
+      ]
     }
   },
   "server": {

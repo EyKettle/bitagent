@@ -1,84 +1,48 @@
-import { createInterface } from "node:readline";
-import { Recoverable } from "node:repl";
-import { inspect, parseArgs } from "node:util";
-import { createApplication } from "@bitagent/core";
-import { createScriptConsole, ScriptCompileError } from "@bitagent/core/node";
-import { createMockLlm } from "./mock-llm.mjs";
+import { fileURLToPath } from "node:url";
+import { parseArgs } from "node:util";
+import { createScheduler } from "@bitagent/core";
+import { waitForTask } from "@bitagent/core/host";
+import { createFileSession, initializeFileWorkspace, runFileConsole } from "@bitagent/core/node";
+import { createMockEntity } from "./mock-entity.mjs";
 
 const { values } = parseArgs({
   options: {
-    "base-url": { type: "string", default: "http://127.0.0.1:4317/v1" },
+    "base-url": { type: "string", default: "http://127.0.0.1:4318" },
+    cwd: { type: "string", default: fileURLToPath(new URL("./workspace/", import.meta.url)) },
     help: { type: "boolean", short: "h", default: false },
   },
   allowPositionals: false,
 });
-const help = ".help lists commands; .break discards unfinished input; .clear resets definitions; .exit cancels managed work and waits.";
 
 if (values.help) {
-  console.log("Usage: node examples/console.mjs [--base-url http://127.0.0.1:4317/v1]");
-  console.log(help);
+  console.log("Usage: node examples/console.mjs [--cwd directory] [--base-url http://127.0.0.1:4318]");
+  console.log("Edit TypeScript files, then use .run <path> in this live instance.");
+  console.log("The default workspace is examples/workspace. Existing tsconfig.json files are never overwritten.");
+  console.log(".exit, EOF and signals cancel managed tasks and wait for cooperative cleanup; the separate mock server stays running.");
 } else {
-  const app = createApplication();
-  const scripts = await createScriptConsole({ app, llm: createMockLlm(values["base-url"]) });
-  const interactive = Boolean(process.stdin.isTTY && process.stdout.isTTY);
-  const terminal = createInterface({
-    input: process.stdin, output: process.stdout, terminal: interactive, crlfDelay: Infinity,
-  });
-  let closed = false;
-  let interrupted = false;
-  let pending = "";
+  const app = createScheduler();
+  const llm = createMockEntity(values["base-url"]);
+  initializeFileWorkspace(values.cwd);
+  const session = createFileSession({ app, llm, cwd: values.cwd });
+  const input = new AbortController();
   const reason = new Error("Console closed");
-  const cancelWork = () => { for (const run of app.list()) run.cancel(reason); };
   const interrupt = () => {
-    interrupted = true;
-    cancelWork();
-    terminal.close();
+    input.abort(reason);
+    for (const task of app.list()) task.cancel(reason);
   };
-  terminal.once("close", () => { closed = true; });
-  terminal.once("SIGINT", interrupt);
   process.once("SIGINT", interrupt);
   process.once("SIGTERM", interrupt);
-  const prompt = () => {
-    if (!interactive || closed) return;
-    terminal.setPrompt(pending === "" ? "bitagent> " : "... ");
-    terminal.prompt();
-  };
-  console.log("BitAgent — trusted TypeScript; app and llm are available.");
-  console.log(help);
-  prompt();
-
+  console.log("Host shutdown: .exit cancels managed tasks and waits for cooperative cleanup.");
   try {
-    for await (const line of terminal) {
-      if (interrupted) break;
-      const command = line.trim();
-      if (command === ".exit") { pending = ""; break; }
-      if (command === ".break") pending = "";
-      else if (pending === "" && command === ".help") console.log(help);
-      else if (pending === "" && command === ".clear") await scripts.reset();
-      else {
-        pending += line + "\n";
-        try {
-          const { value } = await scripts.evaluate(pending);
-          if (value !== undefined) console.log(inspect(value, { colors: interactive }));
-          pending = "";
-        } catch (error) {
-          if (!(error instanceof Recoverable)) {
-            console.log(error instanceof ScriptCompileError ? error.message : inspect(error));
-            pending = "";
-          }
-        }
-      }
-      prompt();
-    }
-    if (!interrupted && pending.trim() !== "") {
-      console.error("Input ended with an incomplete TypeScript snippet.");
-      process.exitCode = 1;
-    }
+    await runFileConsole({ session, signal: input.signal });
   } finally {
-    terminal.close();
-    process.off("SIGINT", interrupt);
-    process.off("SIGTERM", interrupt);
-    cancelWork();
-    await Promise.all(app.list().map((run) => run.done));
+    interrupt();
+    try {
+      await Promise.all(app.list().map((task) => waitForTask(task)));
+    } finally {
+      process.off("SIGINT", interrupt);
+      process.off("SIGTERM", interrupt);
+      session.close();
+    }
   }
 }

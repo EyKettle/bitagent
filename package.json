@@ -43,7 +43,8 @@
     "test": "pnpm run build && tsc -p tsconfig.test.json && node --test --test-concurrency=1 .build/test/*.test.js test/*.test.mjs",
     "check": "pnpm run typecheck && pnpm run test",
     "console": "pnpm run build && node examples/console.mjs",
-    "mock:start": "node --import tsx dev/mock.mjs"
+    "mock:start": "node --import tsx dev/mock.mjs",
+    "mock:submit": "node --import tsx dev/mock.mjs --model submit --port 4318"
   },
   "dependencies": {
     "@earendil-works/pi-ai": "1.5.2",
