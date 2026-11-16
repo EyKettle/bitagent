@@ -4,6 +4,12 @@
 
 [![Conventional Commits][commit-badge]][conventional-commits]
 
+> [!CAUTION]
+> 该分支承担前期探索工作，是未经实测的实验版本。
+>
+> 核心功能不完整，工程质量没有保证。
+> 由 AI 交付，可能包含低质量代码或有问题的文档。
+
 BitAgent 是由程序控制的 LLM 基设。
 在自己的编辑器中编写 TypeScript 文件，再交给同一个持续实例执行；函数、变量和任务保留到用户显式清理为止。
 用户流程使用 `function*` 和 `yield*` 协程，不需要协调 Promise。
