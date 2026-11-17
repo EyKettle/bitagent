@@ -2,6 +2,10 @@
 
 给用户用的 PTC 模式。
 
+[架构总纲][architecture]
+
+[architecture]: architecture.md
+
 ## 脚本控制台
 
 用户编写一段类型安全的 TypeScript 脚本，BitAgent 执行它。
