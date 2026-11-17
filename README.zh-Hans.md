@@ -248,7 +248,7 @@ BitAgent 提供现成的 TypeScript Program，不使用该依赖基于 glob 的�
 
 [commit-badge]: https://img.shields.io/badge/Conventional%20Commits-1.0.0-%23FE5196?logo=conventionalcommits&logoColor=white
 [conventional-commits]: https://conventionalcommits.org
-[design]: docs_zh-Hans/design.md
+[design]: docs/zh-Hans/design.md
 [translator]: src/skills/translate.ts
 [custom]: examples/workspace/custom.ts
 [start]: examples/workspace/start.ts

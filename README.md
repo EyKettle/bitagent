@@ -249,7 +249,7 @@ BitAgent supplies an existing TypeScript Program and does not use that dependenc
 
 [commit-badge]: https://img.shields.io/badge/Conventional%20Commits-1.0.0-%23FE5196?logo=conventionalcommits&logoColor=white
 [conventional-commits]: https://conventionalcommits.org
-[design]: docs_zh-Hans/design.md
+[design]: docs/zh-Hans/design.md
 [translator]: src/skills/translate.ts
 [custom]: examples/workspace/custom.ts
 [start]: examples/workspace/start.ts
