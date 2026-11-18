@@ -8,6 +8,7 @@ BitAgent 的模块按稳定职责分解，技能通过模块的公开契约组�
 [design]: design.md
 [ts-modules]: https://www.typescriptlang.org/docs/handbook/2/modules.html#how-javascript-modules-are-defined
 [components]: https://c4model.com/abstractions/component
+[effection]: https://frontside.com/effection/guides/v4/thinking-in-effection
 
 ## 系统目标与约束
 
@@ -64,9 +65,17 @@ BitAgent 的模块按稳定职责分解，技能通过模块的公开契约组�
 `Runtime` 推进程序提供的流程，持有执行句柄、执行归属与清理状态。
 它服务普通脚本、业务函数、模型生成和工具执行，不把通用执行解释成某种 LLM 活动。
 
+业务协程以原生 Generator 承载流程，通过 Core 的公开原语产生合法挂起点。
+调度、执行范围、结构化取消和清理展开使用 [Effection][effection] 作为私有内核，不再另建一套通用协程调度与作用域引擎。
+原生 Generator 提供挂起与恢复的语言协议，内核负责相应生命周期；二者不要求业务代码采用第三方的完整操作协议。
+
+Core 的适配层持有应用执行根、作业身份、启动方式、状态与结果，并兑现自身的错误和取消契约。
+第三方 `Operation`、`Task` 或 `Future` 不直接成为公开 `Coroutine` 或 `Job` 的别名；第三方默认的子任务失败传播也不代替 Core 的独立作业失败策略。
+宿主操作的取消通知与实际结束由 `Host` 对接，内核结束等待或发出 abort 不等于外部操作已经结束。
+
 | 单元模块 | 组件 | 职责 |
 | --- | --- | --- |
-| `Jobs` | 作业句柄、协程调度器、执行范围 | 承担启动、挂起、等待、取消及自有子作业的收束 |
+| `Jobs` | 作业句柄、内核适配器、执行范围 | 基于 Effection 兑现 Core 的启动、挂起、等待、取消及自有子作业收束契约 |
 | `ValueContracts` | 契约值工厂、值校验器 | 消费已编译契约产物，对实际参数和结果校验、形成相应数据副本 |
 | `Functions` | 类型化业务函数包装器 | 用参数与结果契约包装普通业务流程，按业务声明的启动方式交付作业 |
 | `Host` | 宿主异步适配器、清理适配器 | 将宿主操作接入协程执行和取消收束，不把 Promise 桥接负担交给业务调用者 |
