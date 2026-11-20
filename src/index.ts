@@ -3,6 +3,8 @@ export type { ContractParser } from "./contracts.js";
 export { createSubmitTool, defineFunction } from "./functions.js";
 export type { CoroutineFunction, FunctionBody, FunctionSignature, SubmitTool } from "./functions.js";
 export type { GenerationControl, LLMEntity, ModelContext, ModelMessage, ModelResponse, ModelTool, ModelToolCall } from "./model.js";
+export { Job, JobCancelledError, JobStateError } from "./runtime/jobs.js";
+export type { JobOutcome, JobState } from "./runtime/jobs.js";
 export { createScheduler, TaskCancelledError } from "./coroutine.js";
 export type { Coroutine, Scheduler, Suspension, Task, TaskOutcome, TaskState } from "./coroutine.js";
 export { createApplication, RunCancelledError } from "./runtime.js";

@@ -1,8 +1,7 @@
-/** A suspension can only be produced by a coroutine primitive. */
-export interface Suspension { readonly kind: unique symbol; }
-
-/** Use yield* to suspend and receive a statically typed completion value. */
-export type Coroutine<T> = Generator<Suspension, T, unknown>;
+import { readSuspension, type Coroutine } from "./runtime/protocol.js";
+import { fromAsync } from "./runtime/host.js";
+export { fromAsync } from "./runtime/host.js";
+export type { Coroutine, Suspension } from "./runtime/protocol.js";
 
 export type TaskOutcome<T> =
   | { readonly status: "succeeded"; readonly value: T }
@@ -36,17 +35,7 @@ export class TaskCancelledError extends Error {
   }
 }
 
-type Operation = (signal: AbortSignal) => unknown | PromiseLike<unknown>;
-const operations = new WeakMap<Suspension, Operation>();
 const completions = new WeakMap<Task<unknown>, Promise<TaskOutcome<unknown>>>();
-
-/** Host adapter primitive. Public user scripts consume its coroutine, not its Promise. */
-export function* fromAsync<T>(operation: (signal: AbortSignal) => T | PromiseLike<T>): Coroutine<T> {
-  const suspension = Object.freeze({}) as Suspension;
-  operations.set(suspension, operation);
-  // The scheduler resumes this suspension only with this operation's result.
-  return (yield suspension) as T;
-}
 
 /** Host integration only: tasks intentionally expose no Promise on their public handles. */
 export function waitForTask<T>(task: Task<T>): Promise<TaskOutcome<T>> {
@@ -122,9 +111,9 @@ export function createScheduler(): Scheduler {
             let value: unknown;
             try {
               controller.signal.throwIfAborted();
-              const operation = operations.get(step.value);
-              if (operation === undefined) throw new TypeError("Coroutine yielded an unknown suspension; use yield*");
-              value = await operation(controller.signal);
+              const operation = readSuspension(step.value);
+              if (operation?.kind !== "async") throw new TypeError("Coroutine yielded an unknown suspension; use yield*");
+              value = await operation.operation(controller.signal);
               controller.signal.throwIfAborted();
             } catch (error) {
               setActive("running");

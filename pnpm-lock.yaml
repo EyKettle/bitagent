@@ -178,6 +178,9 @@ importers:
       ajv:
         specifier: 8.20.0
         version: 8.20.0
+      effection:
+        specifier: 4.2.0
+        version: 4.2.0
       ts-json-schema-generator:
         specifier: 2.9.0
         version: 2.9.0
@@ -879,6 +882,10 @@ packages:
 
   ee-first@1.1.1:
     resolution: {integrity: sha512-WMwm9LhRUo+WUaRN+vRuETqG89IgZphVSNkdFgeb6sS/E4OrDIN7t48CAewSHXc6C8lefD8KKfr5vY61brQlow==}
+
+  effection@4.2.0:
+    resolution: {integrity: sha512-exjR8G1aFFcmNMUSsAZKsFJXB1K7CZQm6eKFcNyNnFOG7yEcVo81GLWGEadjheFIr0Mxvi6e40TzN+HyW/uyxw==}
+    engines: {node: '>= 16'}
 
   encodeurl@2.0.3:
     resolution: {integrity: sha512-mIteYONiEfc4xWf2F1WXovh1c8npzS00vNeiUPdwFF+QlVJni+gNvpQltLMQhob8rew/bWWc/bGTuUr0EUGt0w==}
@@ -2142,6 +2149,8 @@ snapshots:
       safe-buffer: 5.2.1
 
   ee-first@1.1.1: {}
+
+  effection@4.2.0: {}
 
   encodeurl@2.0.3: {}
 

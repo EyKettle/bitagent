@@ -9,6 +9,7 @@
   },
   "include": [
     "src/index.ts",
+    "src/host.ts",
     "src/runtime.ts",
     "src/text.ts",
     "src/skills/**/*.ts"
