@@ -1,5 +1,16 @@
 import type { Coroutine } from "./protocol.js";
 
+type ThenFunctionSignature = ((...args: never[]) => unknown) | (abstract new (...args: never[]) => unknown);
+type ThenableCompletion<T> = T extends { readonly then?: infer Then }
+  ? unknown extends Then ? never : [Extract<Then, ThenFunctionSignature>] extends [never] ? never : T
+  : never;
+
+/** Reject known callable-then branches without widening completion inference. */
+export type JobBody<T> = (() => Coroutine<T>) & NoInfer<
+  unknown extends T ? unknown
+    : [ThenableCompletion<T>] extends [never] ? unknown : never
+>;
+
 export type JobState =
   | "created" | "generating" | "cancelling"
   | "finished" | "failed" | "cancelled";

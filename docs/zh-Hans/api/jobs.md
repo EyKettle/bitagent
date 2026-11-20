@@ -16,10 +16,14 @@
 
 | 接口 | 签名 | 行为 |
 | --- | --- | --- |
-| `Job.create` | `create<T>(body: () => Coroutine<T>): Job<T>` | 创建 `created` 作业，等待显式启动 |
-| `Job.spawn` | `spawn<T>(body: () => Coroutine<T>): Job<T>` | 创建并启动作业；业务体在当前入口返回后执行 |
+| `Job.create` | `create<T>(body: JobBody<T>): Job<T>` | 创建 `created` 作业，等待显式启动 |
+| `Job.spawn` | `spawn<T>(body: JobBody<T>): Job<T>` | 创建并启动作业；业务体在当前入口返回后执行 |
 
 `Coroutine<T>` 的类型为 `Generator<Suspension, T, unknown>`。
+`JobBody<T>` 从 Core 类型入口导入，是 `() => Coroutine<T>` 与完成值调用约束的交集，不宽化结果 `T`。
+工厂在调用处拒绝 `then` 具有调用或构造签名的完成类型，包括 Promise、结构 thenable，以及可选或联合类型中的相应分支；显式泛型同样受限。
+普通值、`void`、合法联合及 `yield*` 返回推断保留。
+结果类型或 `then` 属性的签名信息被擦除时（如 `unknown`、`any`、宽泛 `object` 或 `Function`），仍由运行时守卫兜底；这不使 thenable 成为合法结果。
 业务体使用同步 `function*`，通过 `yield*` 调用 Core 原语；普通作业返回的值不被复制，也不被解释为业务成功。
 异步操作通过 Host 的 `fromAsync` 取得完成值；作为流程结果返回的 Promise 或其他 thenable 会使作业以 `TypeError` 失败。
 非法挂起值以异常恢复 Generator，使其可以执行清理；异步迭代器同样被拒绝。

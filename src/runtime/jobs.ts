@@ -4,7 +4,7 @@ import { CoroutineFailure, mergeFailures, observeFailure, propagateFailure, type
 import { performAsync, type ExecutionControl } from "./host-operations.js";
 import { isObject, isThenable, readSuspension, suspend, type Coroutine, type Resume, type WaitSuspension } from "./protocol.js";
 import { brandRoot, JobCancelledError, JobStateError } from "./types.js";
-import type { ExecutionRoot, ExecutionRootState, Job as JobHandle, JobOutcome, JobState } from "./types.js";
+import type { ExecutionRoot, ExecutionRootState, Job as JobHandle, JobBody, JobOutcome, JobState } from "./types.js";
 
 export { JobCancelledError, JobStateError } from "./types.js";
 export type { JobOutcome, JobState } from "./types.js";
@@ -261,10 +261,10 @@ class JobExecution<T> implements ExecutionControl {
 }
 
 export const Job = Object.freeze({
-  create<T>(body: () => Coroutine<T>): Job<T> {
+  create<T>(body: JobBody<T>): Job<T> {
     return new JobExecution(creationContext(), body).handle;
   },
-  spawn<T>(body: () => Coroutine<T>): Job<T> {
+  spawn<T>(body: JobBody<T>): Job<T> {
     const job = new JobExecution(creationContext(), body);
     job.start();
     return job.handle;

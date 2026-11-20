@@ -292,13 +292,28 @@ test("unknown suspensions unwind through native finally and thenable results fai
   }));
   assert.ok(failure(await waitForJob(invalid)) instanceof TypeError);
   assert.equal(cleaned, true);
+  // @ts-expect-error known Promise completions are rejected statically and at runtime
   const promise = root.run(() => Job.spawn(function* () { return Promise.resolve(42); }));
   assert.ok(failure(await waitForJob(promise)) instanceof TypeError);
+  // @ts-expect-error structural thenable completions are also rejected statically
   const thenable = root.run(() => Job.spawn(function* () { return { then() { assert.fail("must not assimilate"); } }; }));
   assert.ok(failure(await waitForJob(thenable)) instanceof TypeError);
   // @ts-expect-error asynchronous generators are not Core coroutines
   const asynchronous = root.run(() => Job.spawn(async function* () { return 1; }));
   assert.ok(failure(await waitForJob(asynchronous)) instanceof TypeError);
+  await root.close();
+});
+
+test("erased completion types still reject thenables at runtime", async () => {
+  const root = createExecutionRoot();
+  const values: readonly unknown[] = [Promise.resolve(42), { then() { assert.fail("must not assimilate"); } }];
+  for (const factory of [Job.create, Job.spawn]) {
+    for (const value of values) {
+      const job = root.run(() => factory(function* () { return value; }));
+      job.start();
+      assert.ok(failure(await waitForJob(job)) instanceof TypeError);
+    }
+  }
   await root.close();
 });
 
