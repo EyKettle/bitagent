@@ -1,10 +1,16 @@
 # Controlled runtime implementation verification
 
 Stage 1 implements `Runtime/Jobs` and `Runtime/Host` in the `exploration` worktree.
-This record reports author verification; the independently assigned acceptance and Tier 3 review remain pending.
+This record reports author verification.
+The original Tier 3 [FAIL report][review] records B1.
+B1 has been corrected; [the scoped re-review][b1-review] is PASS.
+Acceptance remains pending.
 The approved route is [the controlled runtime plan][plan].
 
 [plan]: ../../.pi/plans/2026-11-20_123933-controlled-runtime.md
+[review]: ../../.pi/verification/2026-11-20-controlled-runtime/review.md
+[b1-review]: ../../.pi/verification/2026-11-20-controlled-runtime/b1-review.md
+[b1-repair]: ../../.pi/verification/2026-11-20-controlled-runtime/b1-repair.md
 
 ## Environment and boundary
 
@@ -33,6 +39,15 @@ That directory is ignored by Git and must remain available to the accepting revi
 The first baseline command exceeded a 60-second tool limit; the complete baseline above subsequently finished.
 The first isolated offline install selected an empty store on the `/tmp` filesystem.
 The successful retry explicitly selected the existing store and `--package-import-method=copy`; its initial failure is retained in `clean-install.log`.
+
+## B1 remediation
+
+The scoped repair preserves failure provenance across protected handler suspensions without merging independent equal-valued failures.
+Build, both type checks and 54 focused tests passed, including nine added B1 cases and the 45 retained runtime/public cases.
+The original counterexample now preserves both parent and root error identity; its new output is `b1-counterexample-after.log` with exit zero.
+The original 93/93 result, FAIL report, counterexample output and frozen sources remain unchanged historical evidence.
+The [repair record][b1-repair] and [formal artifact re-review][b1-review] give the decisions, current raw records, source/build correspondence and review coverage.
+N1 remains an unimplemented advisory, not a product blocker.
 
 ## Contract and risk coverage
 
@@ -114,5 +129,6 @@ The existing repository provides TypeScript checks; no separate linter is config
 - Cancellation is cooperative; synchronous work retains control until it yields or is placed outside the control path.
 - A Host adapter must include actual resource release in its returned completion.
 - The synchronous self-close guard cannot detect an asynchronous callback waiting for its own root.
-- Independent acceptance and implementation review have not been performed by this author.
+- B1 is corrected and scoped Tier 3 re-review is PASS; stage acceptance remains pending.
+  See [the original review][review] and [the re-review][b1-review].
 - No remote publication or later engineering stage is part of this delivery.

@@ -9,6 +9,15 @@ export function observeFailure(error: unknown): Failure {
   return { error, sources: [{ error }] };
 }
 
+/** A later rethrow keeps its latest delivered source across handler suspensions. */
+export function propagateFailure(error: unknown, delivered: readonly Failure[]): Failure {
+  for (let i = delivered.length - 1; i >= 0; i--) {
+    const failure = delivered[i]!;
+    if (Object.is(error, failure.error)) return failure;
+  }
+  return observeFailure(error);
+}
+
 export function mergeFailures(body: Failure | undefined, shutdown: readonly FailureSource[]): Failure | undefined {
   const sources = [...new Set([...(body?.sources ?? []), ...shutdown])];
   if (sources.length === 0) return undefined;

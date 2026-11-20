@@ -1,6 +1,6 @@
 import { createKernel, waitFor, waitForResume, type Operation } from "./kernel.js";
 import { Lifetime } from "./lifetime.js";
-import { CoroutineFailure, mergeFailures, observeFailure, type Failure, type FailureSource } from "./failures.js";
+import { CoroutineFailure, mergeFailures, observeFailure, propagateFailure, type Failure, type FailureSource } from "./failures.js";
 import { performAsync, type ExecutionControl } from "./host-operations.js";
 import { isObject, isThenable, readSuspension, suspend, type Coroutine, type Resume, type WaitSuspension } from "./protocol.js";
 import { brandRoot, JobCancelledError, JobStateError } from "./types.js";
@@ -211,14 +211,17 @@ class JobExecution<T> implements ExecutionControl {
       throw new TypeError("A Job body must return a synchronous coroutine");
     }
     let resume: Resume = { kind: "next", value: undefined };
+    // Only delivered failures seed provenance, owned for this driver lifetime.
+    const delivered: Failure[] = [];
     while (true) {
       const next = resume;
+      if (next.failure !== undefined) delivered.push(next.failure);
+      else if (next.kind === "throw") delivered.push(observeFailure(next.error));
       let step: IteratorResult<unknown, T>;
       try {
         step = this.enter(() => next.kind === "throw" ? iterator.throw(next.error) : iterator.next(next.value));
       } catch (error) {
-        throw new CoroutineFailure(next.failure !== undefined && Object.is(error, next.failure.error)
-          ? next.failure : observeFailure(error));
+        throw new CoroutineFailure(propagateFailure(error, delivered));
       }
       rejectThenable(step, "A coroutine must produce synchronous iterator results");
       if (!isObject(step)) throw new TypeError("A coroutine must produce iterator results");
