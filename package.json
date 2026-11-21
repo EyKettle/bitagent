@@ -1,7 +1,7 @@
 {
   "name": "@bitagent/core",
   "version": "0.1.0",
-  "description": "Program-controlled LLM workflows with a persistent TypeScript console.",
+  "description": "Structured coroutine Jobs and Host execution boundaries.",
   "type": "module",
   "main": "./dist/index.js",
   "types": "./dist/index.d.ts",
@@ -13,18 +13,6 @@
     "./host": {
       "types": "./dist/host.d.ts",
       "default": "./dist/host.js"
-    },
-    "./pi": {
-      "types": "./dist/pi.d.ts",
-      "default": "./dist/pi.js"
-    },
-    "./node": {
-      "types": "./dist/node/index.d.ts",
-      "default": "./dist/node/index.js"
-    },
-    "./skills": {
-      "types": "./dist/skills/index.d.ts",
-      "default": "./dist/skills/index.js"
     }
   },
   "files": [
@@ -38,26 +26,20 @@
   },
   "packageManager": "pnpm@12.18.0",
   "scripts": {
-    "build": "tsc -p tsconfig.build.json && node dev/build-contracts.mjs",
+    "build": "node dev/build.mjs",
     "typecheck": "tsc --noEmit && tsc -p tsconfig.portable.json --noEmit",
-    "test": "pnpm run build && tsc -p tsconfig.test.json && node --test --test-concurrency=1 .build/test/*.test.js test/*.test.mjs",
+    "test": "pnpm run build && node dev/test.mjs",
     "check": "pnpm run typecheck && pnpm run test",
-    "console": "pnpm run build && node examples/console.mjs",
-    "mock:start": "node --import tsx dev/mock.mjs",
-    "mock:submit": "node --import tsx dev/mock.mjs --model submit --port 4318"
+    "mock:start": "node --import tsx dev/llmock/server.mjs",
+    "mock:submit": "node --import tsx dev/llmock/server.mjs --model submit --port 4318"
   },
   "dependencies": {
-    "@earendil-works/pi-ai": "1.5.2",
-    "@modelcontextprotocol/sdk": "1.32.2",
-    "@types/node": "24.10.0",
-    "ajv": "8.20.0",
-    "effection": "4.2.0",
-    "ts-json-schema-generator": "2.9.0",
-    "ts-node": "10.9.2",
-    "typescript": "5.9.3"
+    "effection": "4.2.0"
   },
   "devDependencies": {
+    "@types/node": "24.10.0",
     "llmock": "3.14.0",
-    "tsx": "4.23.15"
+    "tsx": "4.23.15",
+    "typescript": "5.9.3"
   }
 }

@@ -1,0 +1,106 @@
+{
+  "defaultModel": "bitagent",
+  "models": {
+    "bitagent": {
+      "name": "openai",
+      "model": "bitagent-mock",
+      "endpoint": "v1/chat/completions",
+      "responseType": "stored",
+      "storedResponsesFile": "payloads/default.json",
+      "maxLoremParas": 1,
+      "validateRequests": true,
+      "logRequests": false,
+      "debug": false,
+      "stream": true,
+      "responseDelay": {
+        "min": 25,
+        "max": 25
+      },
+      "embeddings": {
+        "enabled": false,
+        "dimensions": 128
+      },
+      "chaos": {
+        "enabled": false
+      },
+      "responseRules": [
+        {
+          "match": "[error]",
+          "fail": {
+            "kind": "http",
+            "status": 500
+          }
+        },
+        {
+          "match": "[length]",
+          "text": "This answer reached the fixture token limit.",
+          "stopReason": "max_tokens"
+        },
+        {
+          "match": "[summary]",
+          "file": "payloads/summary.txt"
+        }
+      ]
+    },
+    "submit": {
+      "name": "claude",
+      "model": "bitagent-submit",
+      "endpoint": "v1/messages",
+      "responseType": "stored",
+      "storedResponsesFile": "payloads/default.json",
+      "validateRequests": true,
+      "logRequests": false,
+      "debug": false,
+      "stream": true,
+      "responseDelay": {
+        "min": 25,
+        "max": 25
+      },
+      "embeddings": {
+        "enabled": false,
+        "dimensions": 128
+      },
+      "chaos": {
+        "enabled": false
+      },
+      "responseRules": [
+        {
+          "match": "[wait]",
+          "in": "last",
+          "text": "Waiting for cancellation.",
+          "fail": {
+            "kind": "stream-stall",
+            "afterChunks": 0
+          }
+        },
+        {
+          "match": "[error]",
+          "in": "last",
+          "fail": {
+            "kind": "http",
+            "status": 500
+          }
+        },
+        {
+          "match": "[invalid]",
+          "contentFile": "payloads/submit-invalid.json"
+        },
+        {
+          "match": "Invalid submission:",
+          "in": "last",
+          "contentFile": "payloads/submit-valid.json"
+        },
+        {
+          "match": "[valid]",
+          "in": "last",
+          "contentFile": "payloads/submit-valid.json"
+        }
+      ]
+    }
+  },
+  "server": {
+    "host": "127.0.0.1",
+    "port": 4317,
+    "admin": false
+  }
+}

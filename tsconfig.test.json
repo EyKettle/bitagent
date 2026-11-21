@@ -1,13 +1,14 @@
 {
   "extends": "./tsconfig.json",
   "compilerOptions": {
-    "rootDir": ".",
-    "outDir": ".build",
+    "rootDir": "test",
+    "outDir": ".build/test",
     "declaration": true,
-    "sourceMap": true
+    "sourceMap": true,
+    "allowJs": true
   },
   "include": [
-    "src/**/*.ts",
-    "test/**/*.ts"
+    "test/runtime/**/*.ts",
+    "test/runtime/**/*.mjs"
   ]
 }

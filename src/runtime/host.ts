@@ -5,6 +5,6 @@ export function* fromAsync<T>(
   operation: (signal: AbortSignal) => T | PromiseLike<T>,
   options?: { readonly cleanup?: boolean },
 ): Coroutine<T> {
-  // Both executors resume this registered operation with its own typed result.
+  // The Job resumes this registered operation with its own typed result.
   return (yield suspend({ kind: "async", operation, cleanup: options?.cleanup === true })) as T;
 }

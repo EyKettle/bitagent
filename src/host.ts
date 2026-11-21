@@ -1,5 +1,4 @@
-/** Host I/O bridges; application scripts use the coroutine-facing root API. */
+/** Host-owned roots, I/O adaptation and terminal observation. */
 export { fromAsync } from "./runtime/host.js";
 export { createExecutionRoot, waitForJob } from "./runtime/jobs.js";
 export type { ExecutionRoot, ExecutionRootState } from "./runtime/types.js";
-export { waitForTask } from "./coroutine.js";
