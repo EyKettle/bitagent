@@ -13,7 +13,7 @@ export type Job<T> = JobHandle<T>;
 interface ExecutionContext {
   readonly root: Root;
   readonly lifetime: Lifetime;
-  readonly job: { readonly state: JobState } | undefined;
+  readonly job: { readonly state: JobState; readonly handle: JobHandle<unknown> } | undefined;
 }
 let current: ExecutionContext | undefined;
 let nextJobId = 1;
@@ -279,3 +279,6 @@ export function waitForJob<T>(job: Job<T>): Promise<JobOutcome<T>> {
   if (completion === undefined) throw new TypeError("Job does not belong to this Core runtime");
   return completion as Promise<JobOutcome<T>>;
 }
+
+/** Internal service self-wait checks use the actual current synchronous Job identity. */
+export function currentJob(): JobHandle<unknown> | undefined { return current?.job?.handle; }

@@ -13,7 +13,7 @@ function tests(directory) {
     return entry.isDirectory() ? tests(path) : /\.test\.(m?js)$/.test(entry.name) ? [path] : [];
   });
 }
-const files = [".build/test/runtime", "test/types", "test/llmock"].flatMap(tests).sort();
+const files = [".build/test/runtime", "test/types", "test/llmock", "test/program"].flatMap(tests).sort();
 const result = spawnSync(process.execPath, ["--test", "--test-timeout=15000", "--test-concurrency=1", ...files], { stdio: "inherit" });
 if (result.error) throw result.error;
 if (result.signal) throw new Error("Test runner terminated by " + result.signal);

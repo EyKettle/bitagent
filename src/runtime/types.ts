@@ -51,7 +51,9 @@ export interface ExecutionRoot {
   close(reason?: unknown): Promise<void>;
 }
 
+const roots = new WeakSet<ExecutionRoot>();
+export function isExecutionRoot(value: unknown): value is ExecutionRoot { return value !== null && typeof value === "object" && roots.has(value as ExecutionRoot); }
 export function brandRoot(root: Omit<ExecutionRoot, typeof executionRootBrand>): ExecutionRoot {
   Object.defineProperty(root, executionRootBrand, { value: true });
-  return Object.freeze(root) as ExecutionRoot;
+  const handle = Object.freeze(root) as ExecutionRoot; roots.add(handle); return handle;
 }

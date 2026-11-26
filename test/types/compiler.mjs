@@ -11,7 +11,7 @@ export function compileConsumer(fixture, target) {
     noEmit: true, skipLibCheck: true, types: [],
     lib: ["lib.es2022.d.ts", "lib.dom.d.ts"],
     ...(target === undefined ? {} : { paths: {
-      "@bitagent/core": [resolve(target)], "@bitagent/core/host": [resolve(target)],
+      ...Object.fromEntries(["@bitagent/core", "@bitagent/core/host", "@bitagent/core/state", "@bitagent/core/compiler", "@bitagent/core/node"].map(name=>[name,[resolve(target)]])),
     } }),
   });
   const diagnostics = ts.getPreEmitDiagnostics(program);

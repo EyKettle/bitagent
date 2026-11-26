@@ -1,0 +1,12 @@
+{
+  "warm": [
+    {"name":"expression","text":"1 + 2"},
+    {"name":"definition","text":"const item = { name: 'Ada', count: 2 }; item.count"},
+    {"name":"function-contract","text":"import { defineFunction } from '@bitagent/core'; const sum = defineFunction<(a: number, b: number) => number>(function* (_, a, b) { return a + b; });"},
+    {"name":"recursive-contract","text":"import { contract } from '@bitagent/core'; interface Tree { name: string; children?: Tree[] }; const tree = contract<Tree>();"},
+    {"name":"local-import","text":"import { value } from './dependency.js'; value"}
+  ],
+  "dependency":"export const value = { name: 'dependency', count: 2 };",
+  "scales":{"definitions":[10,100,1000],"sourceLines":[10,100,1000]},
+  "changed":"export const value = { name: 'changed', count: 3 };"
+}

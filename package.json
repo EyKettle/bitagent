@@ -1,7 +1,7 @@
 {
   "name": "@bitagent/core",
   "version": "0.1.0",
-  "description": "Structured coroutine Jobs and Host execution boundaries.",
+  "description": "Continuous typed TypeScript applications, structured Jobs and fixed compilation contracts.",
   "type": "module",
   "main": "./dist/index.js",
   "types": "./dist/index.d.ts",
@@ -13,6 +13,18 @@
     "./host": {
       "types": "./dist/host.d.ts",
       "default": "./dist/host.js"
+    },
+    "./state": {
+      "types": "./dist/state.d.ts",
+      "default": "./dist/state.js"
+    },
+    "./compiler": {
+      "types": "./dist/compiler.d.ts",
+      "default": "./dist/compiler.js"
+    },
+    "./node": {
+      "types": "./dist/node.d.ts",
+      "default": "./dist/node.js"
     }
   },
   "files": [
@@ -34,12 +46,12 @@
     "mock:submit": "node --import tsx dev/llmock/server.mjs --model submit --port 4318"
   },
   "dependencies": {
-    "effection": "4.2.0"
+    "effection": "4.2.0",
+    "typescript": "5.9.3"
   },
   "devDependencies": {
     "@types/node": "24.10.0",
     "llmock": "3.14.0",
-    "tsx": "4.23.15",
-    "typescript": "5.9.3"
+    "tsx": "4.23.15"
   }
 }

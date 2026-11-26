@@ -9,6 +9,8 @@
   },
   "include": [
     "src/index.ts",
-    "src/host.ts"
+    "src/host.ts",
+    "src/state.ts",
+    "src/compiler.ts"
   ]
 }

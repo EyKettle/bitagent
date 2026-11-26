@@ -1,66 +1,85 @@
-# BitAgent
+# BitAgent Core
 
-English | [中文](README.zh-Hans.md)
+A continuous typed TypeScript application with structured Jobs, real definitions, fixed compilation versions and runtime data contracts.
 
-BitAgent is a program-controlled LLM harness.
-This exploration baseline provides structured coroutine Jobs and Host execution boundaries.
-
-[Jobs API (中文)][jobs] · [Host API (中文)][host] · [Architecture (中文)][architecture]
-
-[jobs]: docs/zh-Hans/api/jobs.md
-[host]: docs/zh-Hans/api/host.md
-[architecture]: docs/zh-Hans/architecture.md
-[organization]: docs/zh-Hans/source-organization.md
-[mock-config]: dev/llmock/config.json
-[mock-payloads]: dev/llmock/payloads
+[中文](README.zh-Hans.md)
 
 ## Build and verify
 
-Use Node.js 24 or newer and pnpm 12.18.0 from the package root:
+The reference toolchain is Node.js 24+, pnpm 12.18.0 and TypeScript 5.9.3.
 
 ```sh
-pnpm install --frozen-lockfile --ignore-scripts
+pnpm install --frozen-lockfile
 pnpm run check
 ```
 
-The check builds fresh JavaScript and declarations, checks strict and portable types, and runs all runtime, public-type and local HTTP fixtures.
-Tests manage their own loopback processes and need no API credentials.
-`pnpm run build` replaces only `dist/`; the test command replaces only `.build/test/` and preserves verification archives.
-The [source organization][organization] identifies each implementation and test owner.
+Checking and compilation use the ordinary project compiler.
+There is no MVP transformer, REPL, console or model adapter.
 
-## Run a Job
+## Embed a typed application
 
-After building, run this as an ES module in the package:
+A Node embedding supplies an explicit workspace directory URL:
 
 ```js
-import { Job } from "@bitagent/core";
-import { createExecutionRoot, fromAsync, waitForJob } from "@bitagent/core/host";
+import { resolve } from "node:path";
+import { pathToFileURL } from "node:url";
+import { createState } from "@bitagent/core/state";
+import { createTypeScriptCompiler } from "@bitagent/core/node";
+import { createExecutionRoot, createCompilerSession, waitForJob } from "@bitagent/core/host";
 
+const baseURL = pathToFileURL(resolve(".") + "/");
 const root = createExecutionRoot();
+const state = createState();
+const compiler = createTypeScriptCompiler({ baseURL });
+const session = createCompilerSession({ state, root, compiler });
 try {
-  const job = root.run(() => Job.spawn(function* () {
-    return yield* fromAsync(async () => 42);
+  const job = root.run(() => session.prepare({
+    kind: "text", url: new URL("input.ts", baseURL), text: "let count = 1; count",
   }));
-  console.log(await waitForJob(job)); // { state: "finished", value: 42 }
+  const outcome = await waitForJob(job);
+  if (outcome.state !== "finished" || outcome.value.kind !== "ready") {
+    throw new Error("Preparation did not produce an executable input");
+  }
+  console.log(session.execute(outcome.value.input));
+  console.log(state.value(state.find("count")));
 } finally {
-  await root.close();
+  const results = await Promise.allSettled([session.close(), compiler.close(), root.close()]);
+  const errors = results.filter(result => result.status === "rejected").map(result => result.reason);
+  if (errors.length) throw new AggregateError(errors, "Application shutdown failed");
 }
 ```
 
-Jobs use synchronous generators and `yield*`; their handles expose state and outcomes without being Promises.
-Creation fixes ownership.
-Cancellation is cooperative and terminal publication waits for owned work and actual Host operation completion.
-Host adapters include resource release in their completion; synchronous work must yield to keep control responsive.
-The [Jobs][jobs] and [Host][host] references define cancellation, cleanup, failure identity and type constraints.
+Successive inputs refer to adopted earlier definitions.
+Removal uses authentic definition handles.
+Prepared inputs are once-only and reject stale structure before effects.
+State does not serialize or copy bindings.
+Preparation belongs to its caller; synchronous execution enters the application's root so business Jobs can survive input return.
 
-## Run synthetic HTTP fixtures
+The public entries are `@bitagent/core` (Jobs, contracts, functions and tool metadata), `@bitagent/core/host` (roots, publication and Session), `@bitagent/core/state`, `@bitagent/core/compiler` (neutral contracts), and `@bitagent/core/node` (the TypeScript implementation).
+
+## Adapter boundary
+
+The Node adapter captures local TypeScript modules and their declarations before execution.
+Core imports retain the actual package singleton.
+Native synchronous ESM preserves live exports, cycles and cached initialization failure.
+Top-level await, dynamic imports and unsupported external runtime packages receive diagnostics rather than mismatched types and execution.
+
+Known concrete data shapes generate runtime adoption checks and an immutable JSON Schema projection.
+Unrepresentable shapes fail compilation.
+Tool construction in this stage supplies metadata and parameter parsing; dispatch and model integration belong to later stages.
+
+## Local fixtures and measurements
 
 ```sh
 pnpm run mock:start
-pnpm run mock:submit
+node dev/benchmark/program.mjs /tmp/new-command-engine-samples.json
 ```
 
-Run these in separate terminals: the text preset uses port 4317 and the Messages/tool-payload preset uses 4318.
-Both bind to loopback, disable database persistence and request-body file logging, and stop with Ctrl+C.
-Their [configuration][mock-config] and [payloads][mock-payloads] are independent development assets for provider protocol tests.
-For an ephemeral port use `node --import tsx dev/llmock/server.mjs --port 0`.
+The independent LLMock process and raw HTTP payloads support future provider tests, not a hidden product adapter.
+Tests own listeners, child processes and temporary workspaces.
+The benchmark requires a new output path and reports public prepare/execute/State/control latency, cold/changed/scale cases and raw samples.
+Business or network work is not engine overhead.
+
+- [Jobs API](docs/zh-Hans/api/jobs.md)
+- [Source and Session](docs/zh-Hans/api/compiler.md)
+- [Source responsibilities](docs/zh-Hans/source-organization.md)
