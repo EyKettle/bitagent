@@ -25,7 +25,18 @@ BitAgent 没有会话的概念，每次回来都在同一个上下文中无缝�
 
 `drop()` 丢弃用户空间的已定义对象。
 
+- `const file = bit.file` (`function file(path: string): File`)
+
+引入外部文件（通常是 TS 脚本），便于之后调用或进行文件数据处理。
+
 - `const llm = bit.llm` (`function llm(id?: string, options?: llm.ModelOptions): LLMEnitty`)
 
 执行 `llm()` 获取或生成一个 LLM 实体。
 被丢弃时生命周期停止。
+
+## 执行外部脚本
+
+用户可以在自己的编辑器中编写脚本，交由 BitAgent 执行。
+
+对于工作区内的脚本，可以直接通过原生 `import` 引入其中的内容（同原生逻辑，文件中的顶级代码会作为副作用执行）。
+无论如何，都可以通过 `bit.file()` 引入任意位置的代码文件，然后通过 BitAgent 为 `File` 提供的接口完整运行。
