@@ -22,7 +22,7 @@ export class ExecutionContext {
         if (descriptor) Object.defineProperty(this.#global, name, descriptor);
       }
     }
-    Object.assign(this.#global, { global: this.#global }, globals);
+    Object.assign(this.#global, { console, global: this.#global }, globals);
   }
 
   async evaluate(input: CheckedInput): Promise<ExecutionResult> {
