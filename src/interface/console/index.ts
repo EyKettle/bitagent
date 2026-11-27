@@ -28,13 +28,26 @@ function showError(error: unknown): void {
   console.error(`Execution error: ${description}`);
 }
 
+async function submitLine(application: Application, source: string): Promise<void> {
+  const line = source.trim();
+  if (!line) return;
+  if (/^\.drop(?:\s|$)/u.test(line)) {
+    const name = /^\.drop\s+(\S+)$/u.exec(line)?.[1];
+    if (!name) console.error("Usage: .drop NAME");
+    else if (await application.drop(name)) console.log(`Dropped ${name}`);
+    else console.error(`Definition not found: ${name}`);
+    return;
+  }
+  show(await application.submit(source));
+}
+
 async function runConsole(): Promise<void> {
   const application = new Application();
   const terminal = Boolean(process.stdin.isTTY && process.stdout.isTTY);
   const lines = createInterface({ input: process.stdin, output: process.stdout, terminal, prompt: "bit> " });
   if (terminal) lines.prompt();
   for await (const source of lines) {
-    if (source.trim()) show(await application.submit(source));
+    await submitLine(application, source);
     if (terminal) lines.prompt();
   }
 }
