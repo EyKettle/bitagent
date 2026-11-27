@@ -1,0 +1,15 @@
+{
+  "compilerOptions": {
+    "target": "ES2024",
+    "lib": ["ESNext"],
+    "types": ["node"],
+    "module": "NodeNext",
+    "strict": true,
+    "verbatimModuleSyntax": true,
+    "noEmitOnError": true,
+    "rootDir": "src",
+    "outDir": "dist",
+    "sourceMap": true
+  },
+  "include": ["src/**/*.ts"]
+}
