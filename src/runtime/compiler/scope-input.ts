@@ -1,4 +1,5 @@
 import { randomUUID } from "node:crypto";
+import { dirname, extname, resolve } from "node:path";
 import ts from "typescript";
 
 import type { Definition, Scope, SourceInput, TypeSource } from "./scope.js";
@@ -32,8 +33,10 @@ export function bindScope(input: SourceInput, scope: Scope): ScopeInput {
       declarations.push(`import ${typeOnly ? "type " : ""}{ ${exportName} as ${name} } from ${specifier};`);
     }
   }
+  // A native import of the same path is a separate module, not a reference to this batch.
+  const fileName = resolve(dirname(input.fileName), `${prefix}scope${extname(input.fileName)}`);
   return {
-    input: { ...input, source: [input.source, "export {};", ...declarations].join("\n") },
+    input: { fileName, source: [input.source, "export {};", ...declarations].join("\n") },
     imports,
     mutable,
     retained,

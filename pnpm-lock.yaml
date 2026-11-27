@@ -188,6 +188,9 @@ importers:
       '@types/node':
         specifier: ^24.19.4
         version: 24.19.4
+      cjs-module-lexer:
+        specifier: ^2.3.0
+        version: 2.3.0
       typescript:
         specifier: ^6.0.3
         version: 6.0.3
@@ -196,6 +199,9 @@ packages:
 
   '@types/node@24.19.4':
     resolution: {integrity: sha512-s04odlR3ksJrLu7QLi+pddkWLD0RmSbcP9KuWn2/ozQKAp/YgwBC/6x9kJj8yAzZnGPfxePm7zm7nysVPCRagw==}
+
+  cjs-module-lexer@2.3.0:
+    resolution: {integrity: sha512-lmNyBzi6iYiqyrExTctfmjd8tInx+dHu9PBomTfH5RXS53c27JMFJgzNv5TyAnm3PgGf+MLy0+Ws41/HlVxdKQ==}
 
   typescript@6.0.3:
     resolution: {integrity: sha512-y2TvuxSZPDyQakkFRPZHKFm+KKVqIisdg9/CZwm9ftvKXLP8NRWj38/ODjNbr43SsoXqNuAisEf1GdCxqWcdBw==}
@@ -210,6 +216,8 @@ snapshots:
   '@types/node@24.19.4':
     dependencies:
       undici-types: 7.24.6
+
+  cjs-module-lexer@2.3.0: {}
 
   typescript@6.0.3: {}
 

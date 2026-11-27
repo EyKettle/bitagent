@@ -10,11 +10,12 @@
   "scripts": {
     "build": "tsc -p tsconfig.json",
     "check": "tsc -p tsconfig.json --noEmit",
-    "start": "node --experimental-vm-modules dist/interface/console/index.js",
-    "test": "pnpm run build && node --experimental-vm-modules --test test/*.test.mjs"
+    "start": "node --experimental-vm-modules --experimental-import-meta-resolve dist/interface/console/index.js",
+    "test": "pnpm run build && node --experimental-vm-modules --experimental-import-meta-resolve --test test/*.test.mjs"
   },
   "dependencies": {
     "@types/node": "^24.19.4",
+    "cjs-module-lexer": "^2.3.0",
     "typescript": "^6.0.3"
   }
 }

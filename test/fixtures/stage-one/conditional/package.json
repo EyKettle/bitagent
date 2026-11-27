@@ -1,0 +1,14 @@
+{
+  "name": "stage-one-conditional",
+  "version": "1.0.0",
+  "type": "module",
+  "exports": {
+    ".": {
+      "import": {
+        "types": "./index.d.mts",
+        "default": "./import.mjs"
+      },
+      "require": "./require.cjs"
+    }
+  }
+}
