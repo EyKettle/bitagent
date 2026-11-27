@@ -8,7 +8,7 @@ import type { CheckedInput, EvaluatedInput, ExecutionContext, ExecutionResult } 
 import { preview } from "./preview.js";
 import { Compilation, resolveComputedModule } from "./program.js";
 import { Project } from "./project.js";
-import { bindScope, rewriteMutableBindings } from "./scope-input.js";
+import { bindScope, mutableBindingTransforms } from "./scope-input.js";
 import type { BatchScope, SourceInput } from "./scope.js";
 import { emitModule } from "./workspace.js";
 import type { CompiledModule } from "./workspace.js";
@@ -48,9 +48,9 @@ export class TypeScriptCompiler {
     }
 
     const resultPreview = previewResult ? preview(entry, input.source.length) : undefined;
-    const before = scope?.mutable.size ? [rewriteMutableBindings(program, entry, scope)] : [];
-    if (resultPreview) before.push(resultPreview.transform);
-    const emitted = emitModule(program, entry, resolutions(entry.fileName), before);
+    const transforms = scope?.mutable.size ? mutableBindingTransforms(program, entry, scope) : {};
+    if (resultPreview) (transforms.before ??= []).push(resultPreview.transform);
+    const emitted = emitModule(program, entry, resolutions(entry.fileName), transforms);
     diagnostics.push(...toDiagnostics("type", emitted.diagnostics));
     if (diagnostics.length) return reject(diagnostics);
     if (!emitted.module) throw new Error(`TypeScript did not emit ${entry.fileName}`);

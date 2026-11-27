@@ -21,14 +21,14 @@ export function workspaceTarget(resolution: ts.ResolvedModuleWithFailedLookupLoc
 }
 
 export function emitModule(program: ts.Program, file: ts.SourceFile, resolutions: Resolutions,
-  before: readonly ts.TransformerFactory<ts.SourceFile>[] = []): {
+  transforms: ts.CustomTransformers = {}): {
   module: CompiledModule | undefined;
   diagnostics: readonly ts.Diagnostic[];
 } {
   let code: string | undefined;
   const result = program.emit(file, (path, text) => {
     if (/\.(?:js|mjs)$/u.test(path)) code = text;
-  }, undefined, false, { before: [...before], after: [keepModuleSpecifiers] });
+  }, undefined, false, { ...transforms, after: [...(transforms.after ?? []), keepModuleSpecifiers] });
   return {
     module: !result.emitSkipped && code !== undefined
       ? { fileName: file.fileName, source: file.text, code, resolutions }
