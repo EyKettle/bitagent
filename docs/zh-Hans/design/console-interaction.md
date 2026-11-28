@@ -1,5 +1,7 @@
 # 控制台的交互契约
 
+[import]: ../arch/typescript-execution.md#无冲突的重复引用
+
 ## CLI 模式
 
 添加 `--cli` 参数可启动一次性控制台。
@@ -31,7 +33,7 @@ BitAgent 没有会话的概念，每次回来都在同一个上下文中无缝�
 `bit` 对象携带 BitAgent 基本入口，BitAgent 的所有功能均由它提供。
 同样可以被丢弃，也可以通过 `import` 重新引入。
 
-由于重复引入不会造成重复注册，因此可以在自己的编辑器中使用 `import` 确保类型安全。
+由于[重复引入不会造成重复注册][import]，因此可以在自己的编辑器中使用 `import` 确保类型安全。
 
 > [!WARNING]
 > 目前并没有发行包，`import bit from "bitagent"` 并不可行。
