@@ -58,6 +58,9 @@ BitAgent 没有会话的概念，每次回来都在同一个上下文中无缝�
 
 `drop()` 丢弃用户空间的已定义对象。
 
+若丢弃对象被多个变量使用，其同位置内容会从变量 ID 变为 `undefined` 值。
+可能会导致 TS 类型警告。
+
 - `const file = bit.file` (`function file(path: string): File`)
 
 引入外部文件（通常是 TS 脚本），便于之后调用或进行文件数据处理。
