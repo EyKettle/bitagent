@@ -54,6 +54,11 @@ BitAgent 没有会话的概念，每次回来都在同一个上下文中无缝�
 
 对于函数会展开函数签名，便于在控制台中独立确认调用方式。
 
+- `const rename = bit.rename` (`function rename(target: unknown, name: string)` | `function rename(ops: { target: unknown, name: string }[])`)
+
+与 LSP 重命名一样，精确更新所有涉及这个对象的位置的名称（含引用或定义的位置）。
+名称合法性遵循 TS 语法，非法值会被提前拦截。
+
 - `const drop = bit.drop` (`function drop(...target: unknown[]): void`)
 
 `drop()` 丢弃用户空间的已定义对象。
